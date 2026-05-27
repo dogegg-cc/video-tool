@@ -243,11 +243,13 @@ class ConvertViewModel: ObservableObject {
         let logLower = logs.lowercased()
         let isHardwareIssue = logLower.contains("unknown encoder") ||
             logLower.contains("encoder not found") ||
-            logLower.contains("unrecognized option")
+            logLower.contains("unrecognized option") ||
+            logLower.contains("cannot create compression session") ||
+            logLower.contains("prores_videotoolbox")
 
         if task.useHardwareAcceleration, isHardwareIssue {
-            logs += "\n⚠️ [系统检测] 当前 ffmpegkit 库不支持 VideoToolbox 硬件加速编码器。\n"
-            logs += "🔄 [自动回退] 正在切换至 CPU 兼容编码器（libx264/libx265）重新尝试转换...\n"
+            logs += "\n⚠️ [系统检测] 硬件加速编解码器创建会话失败（不支持或分辨率奇葩）。\n"
+            logs += "🔄 [自动回退] 正在切换至 CPU 兼容编码器重新尝试转换...\n"
             tasks[index].useHardwareAcceleration = false
             tasks[index].status = .pending
 

@@ -262,7 +262,10 @@ class VideoConverterEngine {
             return " -c:v libx264 -c:a aac"
 
         case .mov:
-            return " -c:v prores_videotoolbox -profile:v 0 -c:a pcm_s16le"
+            if task.useHardwareAcceleration {
+                return " -c:v prores_videotoolbox -profile:v 0 -allow_sw 1 -c:a pcm_s16le"
+            }
+            return " -c:v prores -profile:v 0 -c:a pcm_s16le"
 
         case .gif:
             return " -vf \"fps=15,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\""
