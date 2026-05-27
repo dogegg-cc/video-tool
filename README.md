@@ -98,5 +98,5 @@ swiftlint
 ---
 
 ## 🛡 运行与支持环境
-- **操作系统**：macOS 12.0 (Monterey) 及更高版本（对 macOS 12 Dock 栏非圆角图标做出了完美的圆角矩形切图兼容）。
+- **操作系统**：macOS 15.0 (Monterey) 及更高版本。
 - **架构支持**：Apple Silicon (M1/M2/M3/M4 系列芯片) `arm64` 纯净原生编译。
