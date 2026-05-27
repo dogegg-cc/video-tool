@@ -136,7 +136,7 @@ struct GeekConsoleView: View {
                     }
                     .frame(height: consoleHeight)
                     .background(Color.black)
-                    .onChange(of: logs) { _, _ in
+                    .onChange(of: logs) { _ in
                         scrollProxy.scrollTo("bottom", anchor: .bottom)
                     }
                 }

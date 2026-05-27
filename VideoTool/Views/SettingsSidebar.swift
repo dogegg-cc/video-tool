@@ -30,7 +30,7 @@ struct SettingsSidebar: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("格式大师")
                         .font(.system(size: 14, weight: .bold))
-                        .fontDesign(.rounded)
+
                     HStack(spacing: 4) {
                         Circle()
                             .fill(Color.green)
