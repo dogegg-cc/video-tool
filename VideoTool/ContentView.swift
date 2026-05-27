@@ -54,7 +54,14 @@ struct ContentView: View {
                         handleDrop(providers: providers)
                     }
 
-                    GeekConsoleView(logs: viewModel.logs, showLogs: $showLogs, consoleHeight: $consoleHeight)
+                    GeekConsoleView(
+                        logs: viewModel.logs,
+                        showLogs: $showLogs,
+                        consoleHeight: $consoleHeight,
+                        onClear: { [weak viewModel] in
+                            viewModel?.clearLogs()
+                        }
+                    )
                 }
             }
         }

@@ -76,6 +76,20 @@ struct TaskCardView: View {
                                 )
                         }
 
+                        if !task.fileSizeString.isEmpty {
+                            Text("大小: \(task.fileSizeString)")
+                                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.black.opacity(0.2))
+                                .foregroundStyle(.secondary)
+                                .cornerRadius(4)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                                )
+                        }
+
                         if !task.useHardwareAcceleration {
                             Text("CPU 软解")
                                 .font(.system(size: 9, weight: .bold, design: .monospaced))

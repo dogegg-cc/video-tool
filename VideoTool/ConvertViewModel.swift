@@ -59,6 +59,9 @@ class ConvertViewModel: ObservableObject {
     @Published var isConverting: Bool = false
     @Published var currentTaskIndex: Int = 0
 
+    private var logBuffer = ""
+    private var isLogUpdateScheduled = false
+
     // 生成并持久化保存 Security-Scoped Bookmark
     func saveBookmark(for url: URL) {
         do {
@@ -178,10 +181,7 @@ class ConvertViewModel: ObservableObject {
                 }
             },
             onLog: { [weak self] logLine in
-                guard let self else { return }
-                Task { @MainActor in
-                    self.logs += logLine
-                }
+                self?.sendLogLine(logLine)
             },
             onCompletion: { [weak self] success, outputPath, tempURL in
                 guard let self else { return }
@@ -309,5 +309,44 @@ class ConvertViewModel: ObservableObject {
 
     func removeTask(at index: Int) {
         tasks.remove(at: index)
+    }
+
+    func clearLogs() {
+        logs = ""
+        logBuffer = ""
+    }
+
+    // MARK: - 极简高性能日志节流系统 (High-Performance Log Throttling)
+
+    func sendLogLine(_ line: String) {
+        // 在后台或主线程调用，安全地追加到临时缓冲区，以 150ms 频率节流刷新 UI，保证 60 FPS 的流畅度
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            logBuffer += line
+
+            if !isLogUpdateScheduled {
+                isLogUpdateScheduled = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                    self?.flushLogBuffer()
+                }
+            }
+        }
+    }
+
+    private func flushLogBuffer() {
+        isLogUpdateScheduled = false
+        guard !logBuffer.isEmpty else { return }
+
+        var current = logs + logBuffer
+        logBuffer = ""
+
+        // 限制最大展示长度，防 SwiftUI Text 产生排版性能瓶颈
+        let maxLen = 40000
+        if current.count > maxLen {
+            let offset = current.count - maxLen
+            let index = current.index(current.startIndex, offsetBy: offset)
+            current = "..." + String(current[index...])
+        }
+        logs = current
     }
 }

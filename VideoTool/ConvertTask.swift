@@ -102,4 +102,25 @@ struct ConvertTask: Identifiable {
             return "\(seconds)秒"
         }
     }
+
+    // 获取源视频的物理文件大小，安全兼容 macOS 沙盒环境
+    var fileSizeString: String {
+        let isScoped = sourceURL.startAccessingSecurityScopedResource()
+        defer {
+            if isScoped {
+                sourceURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: sourceURL.path),
+              let size = attributes[.size] as? Int64
+        else {
+            return ""
+        }
+
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useMB, .useGB, .useKB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: size)
+    }
 }

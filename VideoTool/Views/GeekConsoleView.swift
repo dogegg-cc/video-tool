@@ -9,6 +9,7 @@ struct GeekConsoleView: View {
     let logs: String
     @Binding var showLogs: Bool
     @Binding var consoleHeight: CGFloat
+    let onClear: () -> Void
 
     @State private var dragBaseHeight: CGFloat = 0
     @State private var isHoveringResizer = false
@@ -38,23 +39,40 @@ struct GeekConsoleView: View {
                     .buttonStyle(.plain)
 
                     if showLogs, !logs.isEmpty {
-                        // 一键复制全部日志按钮
-                        Button(action: {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(logs, forType: .string)
-                        }, label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "doc.on.doc.fill")
-                                Text("复制全部")
+                        HStack(spacing: 8) {
+                            // 一键复制全部日志按钮
+                            Button(action: {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(logs, forType: .string)
+                            }, label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "doc.on.doc.fill")
+                                    Text("复制")
+                                }
+                                .font(.system(size: 11))
+                                .foregroundStyle(.purple)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.purple.opacity(0.15))
+                                .cornerRadius(4)
+                            })
+                            .buttonStyle(.plain)
+
+                            // 清空日志按钮
+                            Button(action: onClear) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "trash")
+                                    Text("清空")
+                                }
+                                .font(.system(size: 11))
+                                .foregroundStyle(.orange)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.orange.opacity(0.15))
+                                .cornerRadius(4)
                             }
-                            .font(.system(size: 11))
-                            .foregroundStyle(.purple)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color.purple.opacity(0.15))
-                            .cornerRadius(4)
-                        })
-                        .buttonStyle(.plain)
+                            .buttonStyle(.plain)
+                        }
                         .padding(.trailing, 15)
                     }
 
