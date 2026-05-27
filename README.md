@@ -1,6 +1,6 @@
 # 🌌 格式大师 (VideoTool) - macOS 极客视频格式转换器
 
-[![Platform](https://img.shields.io/badge/Platform-macOS%2012.0+-00FFF0?style=flat-square&logo=apple)](https://developer.apple.com/macos/)
+[![Platform](https://img.shields.io/badge/Platform-macOS%2015.0+-00FFF0?style=flat-square&logo=apple)](https://developer.apple.com/macos/)
 [![Language](https://img.shields.io/badge/Language-Swift%205.7+-D741A7?style=flat-square&logo=swift)](https://swift.org/)
 [![UI Framework](https://img.shields.io/badge/UI-SwiftUI-8A2BE2?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![FFmpeg](https://img.shields.io/badge/Core-FFmpegKit%20arm64-34C759?style=flat-square&logo=ffmpeg)](https://github.com/ffmpegkit/ffmpeg-kit)
