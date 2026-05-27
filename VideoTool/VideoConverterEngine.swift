@@ -48,15 +48,7 @@ class VideoConverterEngine {
         return 0.0
     }
 
-    /// 执行格式转换
-    func convert(
-        task: ConvertTask,
-        outputDir: URL,
-        onProgress: @escaping (Double, String) -> Void, // (进度0~1, 速度)
-        onLog: @escaping (String) -> Void,
-        onCompletion: @escaping (Bool, String?, URL?) -> Void
-    ) {
-        // 1. 尝试从安全书签中恢复源文件访问权限，防止异步线程权限丢失
+    private func resolveSourceURL(for task: ConvertTask) -> (url: URL, isScoped: Bool) {
         var resolvedSourceURL = task.sourceURL
         var isSourceScoped = false
 
@@ -72,9 +64,21 @@ class VideoConverterEngine {
                 isSourceScoped = resolved.startAccessingSecurityScopedResource()
             }
         } else {
-            // 保底常规开启
             isSourceScoped = task.sourceURL.startAccessingSecurityScopedResource()
         }
+        return (resolvedSourceURL, isSourceScoped)
+    }
+
+    /// 执行格式转换
+    func convert(
+        task: ConvertTask,
+        outputDir: URL,
+        onProgress: @escaping (Double, String) -> Void, // (进度0~1, 速度)
+        onLog: @escaping (String) -> Void,
+        onCompletion: @escaping (Bool, String?, URL?) -> Void
+    ) {
+        // 1. 尝试从安全书签中恢复源文件访问权限，防止异步线程权限丢失
+        let (resolvedSourceURL, isSourceScoped) = resolveSourceURL(for: task)
 
         guard isSourceScoped else {
             onCompletion(false, "无法读取源文件权限 (沙盒拦截)", nil)

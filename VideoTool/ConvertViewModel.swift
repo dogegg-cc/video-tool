@@ -86,17 +86,6 @@ class ConvertViewModel: ObservableObject {
     private var logBuffer = ""
     private var isLogUpdateScheduled = false
 
-    // 生成并持久化保存 Security-Scoped Bookmark
-    func saveBookmark(for url: URL) {
-        do {
-            let bookmarkData = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
-            UserDefaults.standard.set(bookmarkData, forKey: "sandbox_directory_bookmark")
-            DebugLog.info("Successfully saved security scoped bookmark for URL: \(url.path)")
-        } catch {
-            DebugLog.error("Failed to create security scoped bookmark: \(error.localizedDescription)")
-        }
-    }
-
     // 添加任务到队列
     func addVideo(url: URL, bookmarkData: Data? = nil) {
         var resolvedBookmark = bookmarkData
@@ -299,7 +288,7 @@ class ConvertViewModel: ObservableObject {
     }
 
     // NSSavePanel 引导保存保底
-    private func presentSavePanel(for tempURL: URL, defaultName: String, completion: @escaping @MainActor (Bool, String?) -> Void) {
+    func presentSavePanel(for tempURL: URL, defaultName: String, completion: @escaping @MainActor (Bool, String?) -> Void) {
         let savePanel = NSSavePanel()
         savePanel.title = "选择保存转换后视频的位置"
         savePanel.nameFieldStringValue = defaultName
@@ -324,6 +313,21 @@ class ConvertViewModel: ObservableObject {
                     completion(false, "用户取消保存")
                 }
             }
+        }
+    }
+}
+
+// MARK: - 辅助授权与队列操作扩展
+
+extension ConvertViewModel {
+    // 生成并持久化保存 Security-Scoped Bookmark
+    func saveBookmark(for url: URL) {
+        do {
+            let bookmarkData = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+            UserDefaults.standard.set(bookmarkData, forKey: "sandbox_directory_bookmark")
+            DebugLog.info("Successfully saved security scoped bookmark for URL: \(url.path)")
+        } catch {
+            DebugLog.error("Failed to create security scoped bookmark: \(error.localizedDescription)")
         }
     }
 
@@ -372,7 +376,7 @@ class ConvertViewModel: ObservableObject {
         }
     }
 
-    private func flushLogBuffer() {
+    func flushLogBuffer() {
         isLogUpdateScheduled = false
         guard !logBuffer.isEmpty else { return }
 

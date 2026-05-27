@@ -72,24 +72,22 @@ struct ContentView: View {
     // MARK: - 辅助交互 (零计算 Body)
 
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
-        for provider in providers {
-            if provider.canLoadObject(ofClass: URL.self) {
-                _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                    if let url {
-                        // 在最开始的生命周期内，立刻提取安全范围书签（Security-Scoped Bookmark）
-                        let isScoped = url.startAccessingSecurityScopedResource()
-                        let bookmarkData = try? url.bookmarkData(
-                            options: .withSecurityScope,
-                            includingResourceValuesForKeys: nil,
-                            relativeTo: nil
-                        )
-                        if isScoped {
-                            url.stopAccessingSecurityScopedResource()
-                        }
+        for provider in providers where provider.canLoadObject(ofClass: URL.self) {
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                if let url {
+                    // 在最开始的生命周期内，立刻提取安全范围书签（Security-Scoped Bookmark）
+                    let isScoped = url.startAccessingSecurityScopedResource()
+                    let bookmarkData = try? url.bookmarkData(
+                        options: .withSecurityScope,
+                        includingResourceValuesForKeys: nil,
+                        relativeTo: nil
+                    )
+                    if isScoped {
+                        url.stopAccessingSecurityScopedResource()
+                    }
 
-                        DispatchQueue.main.async {
-                            viewModel.addVideo(url: url, bookmarkData: bookmarkData)
-                        }
+                    DispatchQueue.main.async {
+                        viewModel.addVideo(url: url, bookmarkData: bookmarkData)
                     }
                 }
             }

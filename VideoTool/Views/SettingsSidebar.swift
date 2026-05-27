@@ -56,22 +56,27 @@ struct SettingsSidebar: View {
 
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                         ForEach(VideoFormat.allCases) { format in
-                            Button(action: {
-                                viewModel.globalFormat = format
-                            }) {
-                                Text(format.shortLabel)
-                                    .font(.system(size: 10, weight: .bold))
-                                    .padding(.vertical, 6)
-                                    .frame(maxWidth: .infinity)
-                                    .background(viewModel.globalFormat == format ? Color.cyan.opacity(0.12) : Color.black.opacity(0.2))
-                                    .foregroundStyle(viewModel.globalFormat == format ? Color.cyan : Color.secondary)
-                                    .cornerRadius(6)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(viewModel.globalFormat == format ? Color.cyan.opacity(0.7) : Color.white.opacity(0.08), lineWidth: 1)
-                                    )
-                                    .shadow(color: viewModel.globalFormat == format ? Color.cyan.opacity(0.15) : Color.clear, radius: 4)
-                            }
+                            Button(
+                                action: { viewModel.globalFormat = format },
+                                label: {
+                                    Text(format.shortLabel)
+                                        .font(.system(size: 10, weight: .bold))
+                                        .padding(.vertical, 6)
+                                        .frame(maxWidth: .infinity)
+                                        .background(viewModel.globalFormat == format ? Color.cyan.opacity(0.12) : Color.black.opacity(0.2))
+                                        .foregroundStyle(viewModel.globalFormat == format ? Color.cyan : Color.secondary)
+                                        .cornerRadius(6)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(
+                                                    viewModel.globalFormat == format ?
+                                                        Color.cyan.opacity(0.7) : Color.white.opacity(0.08),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        .shadow(color: viewModel.globalFormat == format ? Color.cyan.opacity(0.15) : Color.clear, radius: 4)
+                                }
+                            )
                             .buttonStyle(.plain)
                         }
                     }
@@ -85,74 +90,90 @@ struct SettingsSidebar: View {
 
                     VStack(spacing: 6) {
                         ForEach(VideoResolution.allCases) { resolution in
-                            Button(action: {
-                                viewModel.globalResolution = resolution
-                            }) {
-                                HStack {
-                                    Text(resolution.label)
-                                        .font(.system(size: 11, weight: .medium))
-                                    Spacer()
-                                    if viewModel.globalResolution == resolution {
-                                        Circle()
-                                            .fill(Color.purple)
-                                            .frame(width: 6, height: 6)
-                                            .shadow(color: .purple, radius: 4)
+                            Button(
+                                action: { viewModel.globalResolution = resolution },
+                                label: {
+                                    HStack {
+                                        Text(resolution.label)
+                                            .font(.system(size: 11, weight: .medium))
+                                        Spacer()
+                                        if viewModel.globalResolution == resolution {
+                                            Circle()
+                                                .fill(Color.purple)
+                                                .frame(width: 6, height: 6)
+                                                .shadow(color: .purple, radius: 4)
+                                        }
                                     }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        viewModel.globalResolution == resolution ?
+                                            Color.purple.opacity(0.12) : Color.black.opacity(0.15)
+                                    )
+                                    .foregroundStyle(
+                                        viewModel.globalResolution == resolution ?
+                                            Color.purple : Color.primary.opacity(0.8)
+                                    )
+                                    .cornerRadius(6)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(
+                                                viewModel.globalResolution == resolution ?
+                                                    Color.purple.opacity(0.7) : Color.white.opacity(0.08),
+                                                lineWidth: 1
+                                            )
+                                    )
                                 }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(viewModel.globalResolution == resolution ? Color.purple.opacity(0.12) : Color.black.opacity(0.15))
-                                .foregroundStyle(viewModel.globalResolution == resolution ? Color.purple : Color.primary.opacity(0.8))
-                                .cornerRadius(6)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(viewModel.globalResolution == resolution ? Color.purple.opacity(0.7) : Color.white.opacity(0.08), lineWidth: 1)
-                                )
-                            }
+                            )
                             .buttonStyle(.plain)
                         }
                     }
                 }
 
                 // 硬件加速切换 (自定义极光控制Toggle)
-                Button(action: {
-                    viewModel.globalHardwareAccel.toggle()
-                }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("苹果硬件加速")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(.primary)
-                            Text("VideoToolbox 极速引擎")
-                                .font(.system(size: 9))
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        ZStack(alignment: viewModel.globalHardwareAccel ? .trailing : .leading) {
-                            Capsule()
-                                .fill(viewModel.globalHardwareAccel ? Color.cyan.opacity(0.2) : Color.black.opacity(0.3))
-                                .frame(width: 34, height: 18)
-                                .overlay(
-                                    Capsule()
-                                        .stroke(viewModel.globalHardwareAccel ? Color.cyan.opacity(0.6) : Color.white.opacity(0.1), lineWidth: 1)
-                                )
+                Button(
+                    action: { viewModel.globalHardwareAccel.toggle() },
+                    label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("苹果硬件加速")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(.primary)
+                                Text("VideoToolbox 极速引擎")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            ZStack(alignment: viewModel.globalHardwareAccel ? .trailing : .leading) {
+                                Capsule()
+                                    .fill(viewModel.globalHardwareAccel ? Color.cyan.opacity(0.2) : Color.black.opacity(0.3))
+                                    .frame(width: 34, height: 18)
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(
+                                                viewModel.globalHardwareAccel ?
+                                                    Color.cyan.opacity(0.6) : Color.white.opacity(0.1),
+                                                lineWidth: 1
+                                            )
+                                    )
 
-                            Circle()
-                                .fill(viewModel.globalHardwareAccel ? Color.cyan : Color.gray)
-                                .frame(width: 12, height: 12)
-                                .padding(.horizontal, 3)
-                                .shadow(color: viewModel.globalHardwareAccel ? .cyan : .clear, radius: 4)
+                                Circle()
+                                    .fill(viewModel.globalHardwareAccel ? Color.cyan : Color.gray)
+                                    .frame(width: 12, height: 12)
+                                    .padding(.horizontal, 3)
+                                    .shadow(color: viewModel.globalHardwareAccel ? .cyan : .clear, radius: 4)
+                            }
                         }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.15))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                        )
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-                    .background(Color.black.opacity(0.15))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                    )
-                }
+                )
                 .buttonStyle(.plain)
             }
 

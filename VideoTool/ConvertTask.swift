@@ -93,7 +93,7 @@ struct ConvertTask: Identifiable {
     var targetURL: URL?
     var status: ConvertStatus = .pending
     var duration: Double = 0.0 // 视频总时长（秒）
-    var securityBookmark: Data? = nil
+    var securityBookmark: Data?
 
     var fileName: String {
         sourceURL.lastPathComponent
