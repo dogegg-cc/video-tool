@@ -17,26 +17,62 @@ struct GeekConsoleView: View {
         VStack(spacing: 0) {
             // 顶部的感应分隔条与标题栏
             ZStack(alignment: .top) {
-                // 折叠/展开控制按钮
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showLogs.toggle()
+                HStack(spacing: 0) {
+                    // 折叠/展开控制按钮
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            showLogs.toggle()
+                        }
+                    }, label: {
+                        HStack {
+                            Image(systemName: "terminal.fill")
+                                .font(.system(size: 12))
+                            Text("实时调试日志")
+                                .font(.system(size: 12, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.leading, 20)
+                        .padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                    })
+                    .buttonStyle(.plain)
+
+                    if showLogs, !logs.isEmpty {
+                        // 一键复制全部日志按钮
+                        Button(action: {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(logs, forType: .string)
+                        }, label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "doc.on.doc.fill")
+                                Text("复制全部")
+                            }
+                            .font(.system(size: 11))
+                            .foregroundStyle(.purple)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.purple.opacity(0.15))
+                            .cornerRadius(4)
+                        })
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 15)
                     }
-                }, label: {
-                    HStack {
-                        Image(systemName: "terminal.fill")
-                            .font(.system(size: 12))
-                        Text("实时调试日志")
-                            .font(.system(size: 12, weight: .semibold))
-                        Spacer()
+
+                    // 右侧折叠指示箭头
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            showLogs.toggle()
+                        }
+                    }, label: {
                         Image(systemName: showLogs ? "chevron.down" : "chevron.up")
                             .font(.system(size: 10))
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(Color.black.opacity(0.2))
-                })
-                .buttonStyle(.plain)
+                            .padding(.trailing, 20)
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                    })
+                    .buttonStyle(.plain)
+                }
+                .background(Color.black.opacity(0.2))
 
                 // 仅在展开时显示可拖拽的调整柄（悬浮在最顶层 6px 范围）
                 if showLogs {
@@ -75,6 +111,7 @@ struct GeekConsoleView: View {
                         Text(logs.isEmpty ? "等待转换任务开始...\n" : logs)
                             .font(.system(.footnote, design: .monospaced))
                             .foregroundStyle(.green)
+                            .textSelection(.enabled) // 开启选中文本与右键复制功能
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(15)
                             .id("bottom")
