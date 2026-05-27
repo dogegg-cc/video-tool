@@ -8,6 +8,11 @@
 
 **格式大师** 是一款为 macOS 专属定制的高性能、极简未来科技感（Cyberpunk / Space-obsidian）的视频与音频格式转换工具。在保持底层 FFmpeg 多线程转码稳定性的同时，我们将视觉设计、控制反馈与沙盒权限管理重构到了极致。
 
+<p align="center">
+  <img src="screen-view/screen1.png" width="48%" alt="格式大师 主界面" />
+  <img src="screen-view/screen2.png" width="48%" alt="格式大师 转换队列" />
+</p>
+
 ---
 
 ## 🎨 视觉系统与科技感 UI (Cyber Design System)
