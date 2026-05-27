@@ -1,0 +1,15 @@
+{
+  "originHash" : "7b24012a22c673cb49e28356538bc7a24088f511c6f4db646494a9abccbd42ec",
+  "pins" : [
+    {
+      "identity" : "ffmpeg-kit-spm-macos",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dogegg-cc/ffmpeg-kit-spm-macos/",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f4b987e31c85ead53f2824949d8b7179c493af14"
+      }
+    }
+  ],
+  "version" : 3
+}
