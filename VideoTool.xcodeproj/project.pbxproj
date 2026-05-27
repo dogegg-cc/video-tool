@@ -40,6 +40,7 @@
 		0F943E7B2FC68A68002114EE /* VideoToolUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VideoToolUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F943F002FC6CCC9002114EE /* .swiftformat */ = {isa = PBXFileReference; lastKnownFileType = text; path = .swiftformat; sourceTree = "<group>"; };
 		0F943F012FC6CCC9002114EE /* .swiftlint.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
+		0F943F882FC6EDE9002114EE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -96,6 +97,7 @@
 		0F943E5B2FC68A67002114EE = {
 			isa = PBXGroup;
 			children = (
+				0F943F882FC6EDE9002114EE /* README.md */,
 				0F943F002FC6CCC9002114EE /* .swiftformat */,
 				0F943F012FC6CCC9002114EE /* .swiftlint.yml */,
 				0F943E662FC68A67002114EE /* VideoTool */,
