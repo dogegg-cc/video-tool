@@ -11,14 +11,35 @@ class VideoConverterEngine {
     private var activeSessionId: Int?
 
     /// 获取视频时长（秒）
-    func getVideoDuration(at url: URL) -> Double {
-        guard url.startAccessingSecurityScopedResource() else {
+    func getVideoDuration(at url: URL, bookmarkData: Data? = nil) -> Double {
+        var resolvedURL = url
+        var isScoped = false
+
+        if let bookmarkData {
+            var isStale = false
+            if let resolved = try? URL(
+                resolvingBookmarkData: bookmarkData,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                resolvedURL = resolved
+                isScoped = resolved.startAccessingSecurityScopedResource()
+            }
+        } else {
+            isScoped = url.startAccessingSecurityScopedResource()
+        }
+
+        guard isScoped else {
             DebugLog.error("Failed to start accessing security scoped resource for duration")
             return 0.0
         }
-        defer { url.stopAccessingSecurityScopedResource() }
 
-        let mediaInformationSession = FFprobeKit.getMediaInformation(url.path)
+        defer {
+            resolvedURL.stopAccessingSecurityScopedResource()
+        }
+
+        let mediaInformationSession = FFprobeKit.getMediaInformation(resolvedURL.path)
         if let info = mediaInformationSession?.getMediaInformation() {
             if let durationStr = info.getDuration(), let duration = Double(durationStr) {
                 return duration
@@ -35,9 +56,28 @@ class VideoConverterEngine {
         onLog: @escaping (String) -> Void,
         onCompletion: @escaping (Bool, String?, URL?) -> Void
     ) {
-        // 1. 获取安全访问权限（沙盒兼容）
-        guard task.sourceURL.startAccessingSecurityScopedResource() else {
-            onCompletion(false, "无法读取源文件权限", nil)
+        // 1. 尝试从安全书签中恢复源文件访问权限，防止异步线程权限丢失
+        var resolvedSourceURL = task.sourceURL
+        var isSourceScoped = false
+
+        if let bookmarkData = task.securityBookmark {
+            var isStale = false
+            if let resolved = try? URL(
+                resolvingBookmarkData: bookmarkData,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                resolvedSourceURL = resolved
+                isSourceScoped = resolved.startAccessingSecurityScopedResource()
+            }
+        } else {
+            // 保底常规开启
+            isSourceScoped = task.sourceURL.startAccessingSecurityScopedResource()
+        }
+
+        guard isSourceScoped else {
+            onCompletion(false, "无法读取源文件权限 (沙盒拦截)", nil)
             return
         }
 
@@ -45,18 +85,20 @@ class VideoConverterEngine {
         let isOutputDirScoped = outputDir.startAccessingSecurityScopedResource()
 
         defer {
-            task.sourceURL.stopAccessingSecurityScopedResource()
+            if isSourceScoped {
+                resolvedSourceURL.stopAccessingSecurityScopedResource()
+            }
         }
 
         // 2. 构造临时输出文件名与路径
         let (tempTargetURL, finalTargetURL) = preparePaths(task: task, outputDir: outputDir)
 
         // 获取视频总时长，用于计算进度
-        let duration = getVideoDuration(at: task.sourceURL)
+        let duration = getVideoDuration(at: resolvedSourceURL)
         let totalDurationMs = duration * 1000.0
 
-        // 3. 构建 FFmpeg 命令行指令
-        let arguments = buildFFmpegArguments(task: task, tempTargetURL: tempTargetURL)
+        // 3. 构建 FFmpeg 命令行指令 (使用已授权安全路径)
+        let arguments = buildFFmpegArguments(task: task, sourceURL: resolvedSourceURL, tempTargetURL: tempTargetURL)
 
         // 4. 异步执行转换
         DebugLog.info("Executing FFmpeg command: \(arguments)")
@@ -115,8 +157,8 @@ class VideoConverterEngine {
         return (tempTargetURL, finalTargetURL)
     }
 
-    private func buildFFmpegArguments(task: ConvertTask, tempTargetURL: URL) -> String {
-        var arguments = "-y -i \"\(task.sourceURL.path)\""
+    private func buildFFmpegArguments(task: ConvertTask, sourceURL: URL, tempTargetURL: URL) -> String {
+        var arguments = "-y -i \"\(sourceURL.path)\""
         arguments += getEncoderArguments(for: task)
 
         if task.targetFormat != .gif, let scaleArg = task.resolution.scaleArgument {

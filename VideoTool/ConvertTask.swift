@@ -43,6 +43,17 @@ enum VideoFormat: String, CaseIterable, Identifiable {
         case .mp3: "mp3"
         }
     }
+
+    var shortLabel: String {
+        switch self {
+        case .mp4: "MP4"
+        case .hevc: "MP4 (高效)"
+        case .mkv: "MKV"
+        case .mov: "MOV"
+        case .gif: "GIF"
+        case .mp3: "MP3"
+        }
+    }
 }
 
 enum VideoResolution: String, CaseIterable, Identifiable {
@@ -82,6 +93,7 @@ struct ConvertTask: Identifiable {
     var targetURL: URL?
     var status: ConvertStatus = .pending
     var duration: Double = 0.0 // 视频总时长（秒）
+    var securityBookmark: Data? = nil
 
     var fileName: String {
         sourceURL.lastPathComponent
@@ -105,14 +117,31 @@ struct ConvertTask: Identifiable {
 
     // 获取源视频的物理文件大小，安全兼容 macOS 沙盒环境
     var fileSizeString: String {
-        let isScoped = sourceURL.startAccessingSecurityScopedResource()
+        var resolvedURL = sourceURL
+        var isScoped = false
+
+        if let bookmarkData = securityBookmark {
+            var isStale = false
+            if let resolved = try? URL(
+                resolvingBookmarkData: bookmarkData,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                resolvedURL = resolved
+                isScoped = resolved.startAccessingSecurityScopedResource()
+            }
+        } else {
+            isScoped = sourceURL.startAccessingSecurityScopedResource()
+        }
+
         defer {
             if isScoped {
-                sourceURL.stopAccessingSecurityScopedResource()
+                resolvedURL.stopAccessingSecurityScopedResource()
             }
         }
 
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: sourceURL.path),
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: resolvedURL.path),
               let size = attributes[.size] as? Int64
         else {
             return ""

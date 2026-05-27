@@ -59,8 +59,8 @@ struct SettingsSidebar: View {
                             Button(action: {
                                 viewModel.globalFormat = format
                             }) {
-                                Text(format.extensionName.uppercased())
-                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                Text(format.shortLabel)
+                                    .font(.system(size: 10, weight: .bold))
                                     .padding(.vertical, 6)
                                     .frame(maxWidth: .infinity)
                                     .background(viewModel.globalFormat == format ? Color.cyan.opacity(0.12) : Color.black.opacity(0.2))

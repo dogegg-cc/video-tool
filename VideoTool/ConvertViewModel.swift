@@ -51,9 +51,33 @@ class ConvertViewModel: ObservableObject {
         }
     }
 
-    @Published var globalFormat: VideoFormat = .mp4
-    @Published var globalResolution: VideoResolution = .original
-    @Published var globalHardwareAccel: Bool = true
+    @Published var globalFormat: VideoFormat = .mp4 {
+        didSet {
+            updatePendingTasks()
+        }
+    }
+
+    @Published var globalResolution: VideoResolution = .original {
+        didSet {
+            updatePendingTasks()
+        }
+    }
+
+    @Published var globalHardwareAccel: Bool = true {
+        didSet {
+            updatePendingTasks()
+        }
+    }
+
+    private func updatePendingTasks() {
+        for i in 0 ..< tasks.count {
+            if case .pending = tasks[i].status {
+                tasks[i].targetFormat = globalFormat
+                tasks[i].resolution = globalResolution
+                tasks[i].useHardwareAcceleration = globalHardwareAccel
+            }
+        }
+    }
 
     @Published var logs: String = ""
     @Published var isConverting: Bool = false
@@ -74,16 +98,30 @@ class ConvertViewModel: ObservableObject {
     }
 
     // 添加任务到队列
-    func addVideo(url: URL) {
-        // 使用安全访问机制获取视频时长
-        let duration = VideoConverterEngine.shared.getVideoDuration(at: url)
+    func addVideo(url: URL, bookmarkData: Data? = nil) {
+        var resolvedBookmark = bookmarkData
+        if resolvedBookmark == nil {
+            let isScoped = url.startAccessingSecurityScopedResource()
+            resolvedBookmark = try? url.bookmarkData(
+                options: .withSecurityScope,
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+            if isScoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        // 使用安全访问机制获取视频时长，传入安全范围书签以确保时长解析成功
+        let duration = VideoConverterEngine.shared.getVideoDuration(at: url, bookmarkData: resolvedBookmark)
 
         let task = ConvertTask(
             sourceURL: url,
             targetFormat: globalFormat,
             resolution: globalResolution,
             useHardwareAcceleration: globalHardwareAccel,
-            duration: duration
+            duration: duration,
+            securityBookmark: resolvedBookmark
         )
         tasks.append(task)
     }
@@ -250,8 +288,9 @@ class ConvertViewModel: ObservableObject {
                 }
             }
         } else {
-            tasks[index].status = .failed(error: "转换失败")
-            logs += "\n[转换失败]\n"
+            let errorMsg = outputPath ?? "原因未知，请检查控制台日志"
+            tasks[index].status = .failed(error: errorMsg)
+            logs += "\n[转换失败] 原因: \(errorMsg)\n"
 
             // 同样为后续任务的继续提供 50ms 间隔缓冲
             try? await Task.sleep(nanoseconds: 50_000_000)
