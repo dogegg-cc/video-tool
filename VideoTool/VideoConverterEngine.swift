@@ -265,7 +265,7 @@ class VideoConverterEngine {
             if task.useHardwareAcceleration {
                 return " -c:v prores_videotoolbox -profile:v 0 -allow_sw 1 -c:a pcm_s16le"
             }
-            return " -c:v prores -profile:v 0 -c:a pcm_s16le"
+            return " -c:v prores -profile:v 0 -pix_fmt yuv422p10le -c:a pcm_s16le"
 
         case .gif:
             return " -vf \"fps=15,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\""
