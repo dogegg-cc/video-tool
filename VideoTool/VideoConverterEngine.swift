@@ -41,52 +41,38 @@ class VideoConverterEngine {
             return
         }
 
-        // 确保输出目录有安全范围权限凭证
-        _ = outputDir.startAccessingSecurityScopedResource()
+        // 确保输出目录有安全范围权限凭证 (在 C 回调线程执行前保持 active 状态)
+        let isOutputDirScoped = outputDir.startAccessingSecurityScopedResource()
 
         defer {
             task.sourceURL.stopAccessingSecurityScopedResource()
-            outputDir.stopAccessingSecurityScopedResource()
         }
 
-        // 2. 构造临时输出文件名与真正的输出路径
-        let baseName = task.sourceURL.deletingPathExtension().lastPathComponent
-        let targetFileName = "\(baseName)_converted.\(task.targetFormat.extensionName)"
-
-        let tempDir = FileManager.default.temporaryDirectory
-        let tempUUID = UUID().uuidString
-        let tempTargetURL = tempDir.appendingPathComponent("\(tempUUID).\(task.targetFormat.extensionName)")
-
-        // 外部指定的最终归档路径
-        let finalTargetURL = outputDir.appendingPathComponent(targetFileName)
-
-        // 提前删除最终路径下的同名残留，防移动冲突
-        if FileManager.default.fileExists(atPath: finalTargetURL.path) {
-            try? FileManager.default.removeItem(at: finalTargetURL)
-        }
+        // 2. 构造临时输出文件名与路径
+        let (tempTargetURL, finalTargetURL) = preparePaths(task: task, outputDir: outputDir)
 
         // 获取视频总时长，用于计算进度
         let duration = getVideoDuration(at: task.sourceURL)
         let totalDurationMs = duration * 1000.0
 
-        // 3. 构建 FFmpeg 命令行指令，输出指向具有读写特权的 tempTargetURL
-        var arguments = "-y -i \"\(task.sourceURL.path)\""
-
-        // 编码器与硬件加速设置 (解耦提取)
-        arguments += getEncoderArguments(for: task)
-
-        // 分辨率裁剪参数（基于强类型枚举映射）
-        if task.targetFormat != .gif, let scaleArg = task.resolution.scaleArgument {
-            arguments += scaleArg
-        }
-
-        arguments += " \"\(tempTargetURL.path)\""
+        // 3. 构建 FFmpeg 命令行指令
+        let arguments = buildFFmpegArguments(task: task, tempTargetURL: tempTargetURL)
 
         // 4. 异步执行转换
         DebugLog.info("Executing FFmpeg command: \(arguments)")
         let session = FFmpegKit.executeAsync(
             arguments,
             withCompleteCallback: { [weak self] session in
+                if isOutputDirScoped {
+                    _ = finalTargetURL.startAccessingSecurityScopedResource()
+                }
+                defer {
+                    if isOutputDirScoped {
+                        finalTargetURL.stopAccessingSecurityScopedResource()
+                        outputDir.stopAccessingSecurityScopedResource()
+                    }
+                }
+
                 guard let self else { return }
                 handleSessionComplete(
                     session: session,
@@ -110,12 +96,43 @@ class VideoConverterEngine {
             }
         )
 
-        if let session {
-            if let dynId = session.value(forKey: "sessionId") as? Int {
-                activeSessionId = dynId
-            } else if let dynId64 = session.value(forKey: "sessionId") as? Int64 {
-                activeSessionId = Int(dynId64)
-            }
+        recordSessionId(from: session)
+    }
+
+    private func preparePaths(task: ConvertTask, outputDir: URL) -> (tempTargetURL: URL, finalTargetURL: URL) {
+        let baseName = task.sourceURL.deletingPathExtension().lastPathComponent
+        let targetFileName = "\(baseName)_converted.\(task.targetFormat.extensionName)"
+
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempUUID = UUID().uuidString
+        let tempTargetURL = tempDir.appendingPathComponent("\(tempUUID).\(task.targetFormat.extensionName)")
+        let finalTargetURL = outputDir.appendingPathComponent(targetFileName)
+
+        if FileManager.default.fileExists(atPath: finalTargetURL.path) {
+            try? FileManager.default.removeItem(at: finalTargetURL)
+        }
+
+        return (tempTargetURL, finalTargetURL)
+    }
+
+    private func buildFFmpegArguments(task: ConvertTask, tempTargetURL: URL) -> String {
+        var arguments = "-y -i \"\(task.sourceURL.path)\""
+        arguments += getEncoderArguments(for: task)
+
+        if task.targetFormat != .gif, let scaleArg = task.resolution.scaleArgument {
+            arguments += scaleArg
+        }
+
+        arguments += " \"\(tempTargetURL.path)\""
+        return arguments
+    }
+
+    private func recordSessionId(from session: Session?) {
+        guard let session = session as? NSObject else { return }
+        if let dynId = session.value(forKey: "sessionId") as? Int {
+            activeSessionId = dynId
+        } else if let dynId64 = session.value(forKey: "sessionId") as? Int64 {
+            activeSessionId = Int(dynId64)
         }
     }
 
@@ -135,13 +152,6 @@ class VideoConverterEngine {
 
         if ReturnCode.isSuccess(returnCode) {
             do {
-                let isScoped = finalTargetURL.startAccessingSecurityScopedResource()
-                defer {
-                    if isScoped {
-                        finalTargetURL.stopAccessingSecurityScopedResource()
-                    }
-                }
-
                 if FileManager.default.fileExists(atPath: finalTargetURL.path) {
                     try? FileManager.default.removeItem(at: finalTargetURL)
                 }
