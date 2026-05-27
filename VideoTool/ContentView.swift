@@ -13,29 +13,53 @@ struct ContentView: View {
     @State private var consoleHeight: CGFloat = 150
 
     var body: some View {
-        HStack(spacing: 0) {
-            SettingsSidebar(viewModel: viewModel)
+        ZStack {
+            // 底层深海极光暗黑色背景
+            Color(red: 0.04, green: 0.04, blue: 0.06)
+                .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                TopControlBar(viewModel: viewModel)
+            // 极客青 (Cyber Cyan) 氛围光晕
+            Circle()
+                .fill(Color.cyan.opacity(0.12))
+                .frame(width: 280, height: 280)
+                .blur(radius: 80)
+                .offset(x: -150, y: -100)
 
-                ZStack {
-                    Color.black.opacity(0.05).ignoresSafeArea()
+            // 迷幻紫 (Neon Purple) 氛围光晕
+            Circle()
+                .fill(Color.purple.opacity(0.12))
+                .frame(width: 320, height: 320)
+                .blur(radius: 90)
+                .offset(x: 200, y: 120)
 
-                    if viewModel.tasks.isEmpty {
-                        DragDropDropzone(isDraggingOver: isDraggingOver, onSelectFiles: selectFiles)
-                    } else {
-                        TaskListView(viewModel: viewModel)
+            // 主应用布局
+            HStack(spacing: 0) {
+                SettingsSidebar(viewModel: viewModel)
+
+                VStack(spacing: 0) {
+                    TopControlBar(viewModel: viewModel)
+
+                    ZStack {
+                        // 曜石暗色卡片槽背景
+                        Color.black.opacity(0.15)
+                            .ignoresSafeArea()
+
+                        if viewModel.tasks.isEmpty {
+                            DragDropDropzone(isDraggingOver: isDraggingOver, onSelectFiles: selectFiles)
+                        } else {
+                            TaskListView(viewModel: viewModel)
+                        }
                     }
-                }
-                .onDrop(of: [.fileURL], isTargeted: $isDraggingOver) { providers in
-                    handleDrop(providers: providers)
-                }
+                    .onDrop(of: [.fileURL], isTargeted: $isDraggingOver) { providers in
+                        handleDrop(providers: providers)
+                    }
 
-                GeekConsoleView(logs: viewModel.logs, showLogs: $showLogs, consoleHeight: $consoleHeight)
+                    GeekConsoleView(logs: viewModel.logs, showLogs: $showLogs, consoleHeight: $consoleHeight)
+                }
             }
         }
         .frame(minWidth: 800, minHeight: 520)
+        .preferredColorScheme(.dark) // 强制开启暗黑模式，解决系统浅色模式下文字发黑看不清的问题
     }
 
     // MARK: - 辅助交互 (零计算 Body)
